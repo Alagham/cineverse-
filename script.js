@@ -1,6 +1,3 @@
-// app.js
-
-// ======== Classes =========
 class Movie {
   #rating;
 
