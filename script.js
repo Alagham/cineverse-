@@ -24,10 +24,10 @@ class Movie {
 
   display() {
     return `
-      <h3>${this.title} (${this.year})</h3>
-      <p><strong>Genre:</strong> ${this.genre}</p>
+      <img src="https://img.omdbapi.com/?apikey=${API_KEY}&t=${encodeURIComponent(this.title)}" alt="${this.title} Poster" style="width:100%; border-radius: 8px; margin-bottom: 10px;" />
+      <h3>${this instanceof ActionMovie ? '🔥' : this instanceof ComedyMovie ? '😂' : ''} ${this.title} (${this.year})</h3>
       <p><strong>Director:</strong> ${this.director}</p>
-      <p><strong>Rating:</strong> ${this.getRating() ?? 'N/A'}</p>
+      <p><strong>Genre:</strong> ${this.genre}${this instanceof ComedyMovie ? ' | <strong>Laugh Score:</strong>' : ' | <strong>Rating:</strong>'} ${this.getRating() ?? 'N/A'}</p>
       <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(this.title + ' trailer')}" target="_blank">🎬 Watch Trailer</a>
     `;
   }
@@ -36,9 +36,10 @@ class Movie {
 class ActionMovie extends Movie {
   display() {
     return `
-      <h3>🔥 ${this.title} (${this.year})</h3>
+      <img src="https://img.omdbapi.com/?apikey=${API_KEY}&t=${encodeURIComponent(this.title)}" alt="${this.title} Poster" style="width:100%; border-radius: 8px; margin-bottom: 10px;" />
+      <h3>${this instanceof ActionMovie ? '🔥' : this instanceof ComedyMovie ? '😂' : ''} ${this.title} (${this.year})</h3>
       <p><strong>Director:</strong> ${this.director}</p>
-      <p><strong>Genre:</strong> ${this.genre} | <strong>Rating:</strong> ${this.getRating() ?? 'N/A'}</p>
+      <p><strong>Genre:</strong> ${this.genre}${this instanceof ComedyMovie ? ' | <strong>Laugh Score:</strong>' : ' | <strong>Rating:</strong>'} ${this.getRating() ?? 'N/A'}</p>
       <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(this.title + ' trailer')}" target="_blank">🎬 Watch Trailer</a>
     `;
   }
@@ -47,9 +48,10 @@ class ActionMovie extends Movie {
 class ComedyMovie extends Movie {
   display() {
     return `
-      <h3>😂 ${this.title} (${this.year})</h3>
+      <img src="https://img.omdbapi.com/?apikey=${API_KEY}&t=${encodeURIComponent(this.title)}" alt="${this.title} Poster" style="width:100%; border-radius: 8px; margin-bottom: 10px;" />
+      <h3>${this instanceof ActionMovie ? '🔥' : this instanceof ComedyMovie ? '😂' : ''} ${this.title} (${this.year})</h3>
       <p><strong>Director:</strong> ${this.director}</p>
-      <p><strong>Laugh Score:</strong> ${this.getRating() ?? 'N/A'}</p>
+      <p><strong>Genre:</strong> ${this.genre}${this instanceof ComedyMovie ? ' | <strong>Laugh Score:</strong>' : ' | <strong>Rating:</strong>'} ${this.getRating() ?? 'N/A'}</p>
       <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(this.title + ' trailer')}" target="_blank">🎬 Watch Trailer</a>
     `;
   }
@@ -79,10 +81,11 @@ class Review {
 
   display() {
     return `
-      <div class="review">
-        <p><strong>${this.user.username}</strong> on <em>${this.movie.title}</em>:</p>
-        <p>${this.reviewText}</p>
-      </div>
+      <img src="https://img.omdbapi.com/?apikey=${API_KEY}&t=${encodeURIComponent(this.title)}" alt="${this.title} Poster" style="width:100%; border-radius: 8px; margin-bottom: 10px;" />
+      <h3>${this instanceof ActionMovie ? '🔥' : this instanceof ComedyMovie ? '😂' : ''} ${this.title} (${this.year})</h3>
+      <p><strong>Director:</strong> ${this.director}</p>
+      <p><strong>Genre:</strong> ${this.genre}${this instanceof ComedyMovie ? ' | <strong>Laugh Score:</strong>' : ' | <strong>Rating:</strong>'} ${this.getRating() ?? 'N/A'}</p>
+      <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(this.title + ' trailer')}" target="_blank">🎬 Watch Trailer</a>
     `;
   }
 }
@@ -93,9 +96,70 @@ const movieInfo = document.getElementById("movieInfo");
 const searchBtn = document.getElementById("searchBtn");
 const reviewsContainer = document.getElementById("reviewsContainer");
 const movieTitleInput = document.getElementById("movieTitle");
+const gallery = document.getElementById("gallery");
+const filterButtons = document.getElementById("filterButtons");
 
 let currentMovie = null;
 const reviews = [];
+const loadedMovies = [];
+
+const preloadTitles = [
+  "Inception", "Avengers: Endgame", "The Matrix", "The Dark Knight",
+  "Titanic", "Jumanji", "John Wick", "Deadpool", "Toy Story",
+  "The Hangover", "Mad Max: Fury Road", "Iron Man"
+];
+
+const genreFilters = ["All", "Action", "Comedy", "Drama", "Sci-Fi"];
+
+// Load Predefined Movies
+window.addEventListener("DOMContentLoaded", async () => {
+  for (const title of preloadTitles) {
+    const data = await fetchMovieData(title);
+    if (data && data.Response === "True") {
+      const genre = data.Genre.split(",")[0];
+      const MovieClass = genre.toLowerCase() === "action" ? ActionMovie :
+                         genre.toLowerCase() === "comedy" ? ComedyMovie : Movie;
+      const movie = new MovieClass(data.Title, data.Year, genre, data.Director);
+      loadedMovies.push(movie);
+    }
+  }
+  renderGallery("All");
+  renderFilterButtons();
+});
+
+function renderGallery(filter) {
+  gallery.innerHTML = "";
+  const toDisplay = filter === "All"
+    ? loadedMovies
+    : loadedMovies.filter(m => m.genre.toLowerCase().includes(filter.toLowerCase()));
+  toDisplay.forEach(movie => {
+    const card = document.createElement("div");
+    card.className = "movie-card";
+    card.innerHTML = movie.display();
+    card.addEventListener("click", () => {
+      currentMovie = movie;
+      movieInfo.innerHTML = movie.display();
+      movieInfo.classList.remove("hidden");
+    });
+    gallery.appendChild(card);
+  });
+}
+
+function renderFilterButtons() {
+  filterButtons.innerHTML = genreFilters.map(genre => `
+    <button onclick="renderGallery('${genre}')">${genre}</button>
+  `).join("");
+}
+
+async function fetchMovieData(title) {
+  try {
+    const res = await fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&t=${encodeURIComponent(title)}`);
+    return await res.json();
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
 
 searchBtn.addEventListener("click", async () => {
   const title = movieTitleInput.value.trim();
