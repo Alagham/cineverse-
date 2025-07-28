@@ -87,7 +87,6 @@ class Review {
   }
 }
 
-// ======== App Logic =========
 const API_KEY = "ca05fff1";
 const movieInfo = document.getElementById("movieInfo");
 const searchBtn = document.getElementById("searchBtn");
@@ -108,7 +107,6 @@ const preloadTitles = [
 
 const genreFilters = ["All", "Action", "Comedy", "Drama", "Sci-Fi"];
 
-// Load Predefined Movies
 window.addEventListener("DOMContentLoaded", async () => {
   for (const title of preloadTitles) {
     const data = await fetchMovieData(title);
