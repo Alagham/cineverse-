@@ -34,4 +34,8 @@ git clone //github.com/Alagham/cineverse-.git
 cd CineVerse
 
 Author
+<<<<<<< HEAD
 Designed and built by [ALAGBE HAMZAH]
+=======
+Designed and built by [ALAGBE HAMZAH]
+>>>>>>> 7e61d4f8288b408786965f2be3d84ec7df60f0a3
