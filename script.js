@@ -1,11 +1,15 @@
+// app.js
+
+// ======== Classes =========
 class Movie {
   #rating;
 
-  constructor(title, year, genre, director) {
+  constructor(title, year, genre, director, poster) {
     this.title = title;
     this.year = year;
     this.genre = genre;
     this.director = director;
+    this.poster = poster;
     this.#rating = null;
   }
 
@@ -21,7 +25,7 @@ class Movie {
 
   display() {
     return `
-      <img src="https://img.omdbapi.com/?apikey=${API_KEY}&t=${encodeURIComponent(this.title)}" alt="${this.title} Poster" style="width:100%; border-radius: 8px; margin-bottom: 10px;" />
+      <img src="${this.poster !== 'N/A' ? this.poster : 'placeholder.jpg'}" alt="${this.title} Poster" style="width:100%; height:50vh; border-radius: 8px; margin-bottom: 10px;" />
       <h3>${this instanceof ActionMovie ? '🔥' : this instanceof ComedyMovie ? '😂' : ''} ${this.title} (${this.year})</h3>
       <p><strong>Director:</strong> ${this.director}</p>
       <p><strong>Genre:</strong> ${this.genre}${this instanceof ComedyMovie ? ' | <strong>Laugh Score:</strong>' : ' | <strong>Rating:</strong>'} ${this.getRating() ?? 'N/A'}</p>
@@ -30,29 +34,8 @@ class Movie {
   }
 }
 
-class ActionMovie extends Movie {
-  display() {
-    return `
-      <img src="https://img.omdbapi.com/?apikey=${API_KEY}&t=${encodeURIComponent(this.title)}" alt="${this.title} Poster" style="width:100%; border-radius: 8px; margin-bottom: 10px;" />
-      <h3>${this instanceof ActionMovie ? '🔥' : this instanceof ComedyMovie ? '😂' : ''} ${this.title} (${this.year})</h3>
-      <p><strong>Director:</strong> ${this.director}</p>
-      <p><strong>Genre:</strong> ${this.genre}${this instanceof ComedyMovie ? ' | <strong>Laugh Score:</strong>' : ' | <strong>Rating:</strong>'} ${this.getRating() ?? 'N/A'}</p>
-      <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(this.title + ' trailer')}" target="_blank">🎬 Watch Trailer</a>
-    `;
-  }
-}
-
-class ComedyMovie extends Movie {
-  display() {
-    return `
-      <img src="https://img.omdbapi.com/?apikey=${API_KEY}&t=${encodeURIComponent(this.title)}" alt="${this.title} Poster" style="width:100%; border-radius: 8px; margin-bottom: 10px;" />
-      <h3>${this instanceof ActionMovie ? '🔥' : this instanceof ComedyMovie ? '😂' : ''} ${this.title} (${this.year})</h3>
-      <p><strong>Director:</strong> ${this.director}</p>
-      <p><strong>Genre:</strong> ${this.genre}${this instanceof ComedyMovie ? ' | <strong>Laugh Score:</strong>' : ' | <strong>Rating:</strong>'} ${this.getRating() ?? 'N/A'}</p>
-      <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(this.title + ' trailer')}" target="_blank">🎬 Watch Trailer</a>
-    `;
-  }
-}
+class ActionMovie extends Movie {}
+class ComedyMovie extends Movie {}
 
 class User {
   constructor(username) {
@@ -78,15 +61,15 @@ class Review {
 
   display() {
     return `
-      <img src="https://img.omdbapi.com/?apikey=${API_KEY}&t=${encodeURIComponent(this.title)}" alt="${this.title} Poster" style="width:100%; border-radius: 8px; margin-bottom: 10px;" />
-      <h3>${this instanceof ActionMovie ? '🔥' : this instanceof ComedyMovie ? '😂' : ''} ${this.title} (${this.year})</h3>
-      <p><strong>Director:</strong> ${this.director}</p>
-      <p><strong>Genre:</strong> ${this.genre}${this instanceof ComedyMovie ? ' | <strong>Laugh Score:</strong>' : ' | <strong>Rating:</strong>'} ${this.getRating() ?? 'N/A'}</p>
-      <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(this.title + ' trailer')}" target="_blank">🎬 Watch Trailer</a>
+      <div class="review">
+        <p><strong>${this.user.username}</strong> on <em>${this.movie.title}</em>:</p>
+        <p>${this.reviewText}</p>
+      </div>
     `;
   }
 }
 
+// ======== App Logic =========
 const API_KEY = "ca05fff1";
 const movieInfo = document.getElementById("movieInfo");
 const searchBtn = document.getElementById("searchBtn");
@@ -107,6 +90,7 @@ const preloadTitles = [
 
 const genreFilters = ["All", "Action", "Comedy", "Drama", "Sci-Fi"];
 
+// Load Predefined Movies
 window.addEventListener("DOMContentLoaded", async () => {
   for (const title of preloadTitles) {
     const data = await fetchMovieData(title);
@@ -114,7 +98,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       const genre = data.Genre.split(",")[0];
       const MovieClass = genre.toLowerCase() === "action" ? ActionMovie :
                          genre.toLowerCase() === "comedy" ? ComedyMovie : Movie;
-      const movie = new MovieClass(data.Title, data.Year, genre, data.Director);
+      const movie = new MovieClass(data.Title, data.Year, genre, data.Director, data.Poster);
       loadedMovies.push(movie);
     }
   }
@@ -173,7 +157,7 @@ searchBtn.addEventListener("click", async () => {
       const MovieClass = genre.toLowerCase() === "action" ? ActionMovie :
                          genre.toLowerCase() === "comedy" ? ComedyMovie : Movie;
 
-      currentMovie = new MovieClass(data.Title, data.Year, genre, data.Director);
+      currentMovie = new MovieClass(data.Title, data.Year, genre, data.Director, data.Poster);
       movieInfo.innerHTML = currentMovie.display();
     } else {
       movieInfo.innerHTML = `<p>❌ Movie not found. Please try the full title (e.g., \"The Matrix\").</p>`;
